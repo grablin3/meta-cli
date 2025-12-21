@@ -1,5 +1,5 @@
 {
-  "name": "grablin",
+  "name": "@grablin/cli",
   "version": "1.0.0",
   "description": "CLI for Grablin project scaffolding",
   "type": "module",
@@ -46,5 +46,13 @@
   "files": [
     "bin/",
     "dist/"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/grablin3/meta-cli.git",
+    "directory": "smartpump"
+  }
 }
