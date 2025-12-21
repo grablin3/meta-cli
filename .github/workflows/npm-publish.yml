@@ -3,9 +3,6 @@ name: Publish to npm
 on:
   push:
     branches: [main]
-    paths:
-      - 'smartpump/src/**'
-      - 'smartpump/tests/**'
   workflow_dispatch:
 
 permissions:
