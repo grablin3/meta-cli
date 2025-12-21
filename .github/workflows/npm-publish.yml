@@ -7,6 +7,8 @@ on:
       - 'smartpump/src/**'
       - 'smartpump/package.json'
       - 'smartpump/tsconfig.json'
+      - '.github/workflows/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
