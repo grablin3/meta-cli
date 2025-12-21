@@ -30,6 +30,10 @@ export function hasToken(): boolean {
 /**
  * Get Authorization header for API requests.
  * Throws AuthError if token not set.
+ *
+ * Note: Uses "Bearer" prefix per GitHub's current OAuth 2.0 standard.
+ * See: https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api
+ * The legacy "token" prefix also works but "Bearer" is the modern standard.
  */
 export function getAuthHeaders(): Record<string, string> {
   return {
