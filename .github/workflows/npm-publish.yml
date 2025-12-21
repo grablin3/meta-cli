@@ -5,13 +5,11 @@ on:
     branches: [main]
     paths:
       - 'smartpump/src/**'
-      - 'smartpump/package.json'
-      - 'smartpump/tsconfig.json'
-      - '.github/workflows/**'
+      - 'smartpump/tests/**'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 defaults:
@@ -38,10 +36,12 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
@@ -53,19 +53,15 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - name: Check version
-        id: version
+      - name: Bump version
         run: |
-          CURRENT=$(npm view @grablin/cli version 2>/dev/null || echo "0.0.0")
-          NEW=$(node -p "require('./package.json').version")
-          if [ "$CURRENT" != "$NEW" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Version changed: $CURRENT -> $NEW"
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "Version unchanged: $CURRENT"
-          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npm version patch --no-git-tag-version
+          git add package.json package-lock.json
+          VERSION=$(node -p "require('./package.json').version")
+          git commit -m "chore: bump version to $VERSION [skip ci]"
+          git push
 
       - name: Publish with provenance
-        if: steps.version.outputs.changed == 'true'
         run: npm publish --access public --provenance
