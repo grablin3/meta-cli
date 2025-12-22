@@ -48,23 +48,34 @@ export function validateConfig(config: GrablinConfig): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Required fields
+  // M37: Required fields with strengthened validation
   if (!config.projectName) {
     errors.push('projectName is required');
-  } else if (!/^[a-zA-Z][a-zA-Z0-9-_]*$/.test(config.projectName)) {
-    errors.push('projectName must start with a letter and contain only letters, numbers, hyphens, and underscores');
+  } else if (!/^[a-zA-Z][a-zA-Z0-9-_]{0,99}$/.test(config.projectName)) {
+    errors.push('projectName must start with a letter, contain only letters, numbers, hyphens, and underscores, and be 1-100 chars');
   }
 
   if (!config.domain) {
     errors.push('domain is required');
-  } else if (!/^[a-z0-9][a-z0-9-]*\.[a-z]{2,}$/.test(config.domain)) {
-    errors.push('domain must be a valid domain name (e.g., myapp.com)');
+  } else if (!/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/i.test(config.domain)) {
+    // M37: Strengthened domain validation - supports subdomains, max 24 char TLD (longest is ~20), no leading/trailing hyphens in labels
+    errors.push('domain must be a valid domain name (e.g., myapp.com, api.myapp.io)');
+  } else if (config.domain.length > 253) {
+    // RFC 1035: max domain length is 253 characters
+    errors.push('domain name too long (max 253 characters)');
+  } else if (config.domain.split('.').some(label => label.length > 63)) {
+    // M37: RFC 1035: each label max 63 characters
+    errors.push('domain label too long (max 63 characters per label)');
   }
 
   if (!config.owner) {
     errors.push('owner email is required');
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(config.owner)) {
+  } else if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(config.owner)) {
+    // M37: Strengthened email validation per RFC 5322
     errors.push('owner must be a valid email address');
+  } else if (config.owner.length > 254) {
+    // M37: RFC 5321: max email length is 254 characters
+    errors.push('email address too long (max 254 characters)');
   }
 
   if (!config.modules || !Array.isArray(config.modules)) {
@@ -113,8 +124,12 @@ function validateModule(module: ModuleConfig, index: number): string[] {
 
   if (!module.moduleId) {
     errors.push(`${prefix}.moduleId is required`);
-  } else if (!/^[a-z][a-z0-9-]*$/.test(module.moduleId)) {
-    errors.push(`${prefix}.moduleId must be lowercase with hyphens only`);
+  } else if (!/^[a-z][a-z0-9-]{0,99}$/.test(module.moduleId)) {
+    // M37: Strengthened moduleId validation - max 100 chars, must start with letter
+    errors.push(`${prefix}.moduleId must be lowercase, start with a letter, use hyphens only, and be 1-100 chars`);
+  } else if (module.moduleId.endsWith('-') || module.moduleId.includes('--')) {
+    // M37: Prevent trailing hyphens and consecutive hyphens
+    errors.push(`${prefix}.moduleId cannot end with hyphen or contain consecutive hyphens`);
   }
 
   return errors;

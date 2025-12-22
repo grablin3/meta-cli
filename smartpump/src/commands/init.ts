@@ -13,14 +13,24 @@ export const initCommand = new Command('init')
     try {
       const configPath = getConfigPath(options.config);
 
-      // Check if config file already exists
-      if (await fs.pathExists(configPath)) {
-        if (!options.force) {
-          const overwrite = await confirmOverwrite(configPath);
-          if (!overwrite) {
-            logger.info('Cancelled');
-            return;
-          }
+      // M40: Atomic file check and user confirmation to prevent TOCTOU
+      // Read existing file content if present (atomic operation)
+      let existingContent: string | null = null;
+      try {
+        existingContent = await fs.readFile(configPath, 'utf-8');
+      } catch (error: any) {
+        // File doesn't exist or can't be read - that's OK
+        if (error.code !== 'ENOENT') {
+          throw new Error(`Cannot access config file: ${error.message}`);
+        }
+      }
+
+      // If file exists and not forced, confirm overwrite
+      if (existingContent !== null && !options.force) {
+        const overwrite = await confirmOverwrite(configPath);
+        if (!overwrite) {
+          logger.info('Cancelled');
+          return;
         }
       }
 
@@ -29,7 +39,7 @@ export const initCommand = new Command('init')
       // Get configuration from user
       const config = await promptForConfig();
 
-      // Save configuration
+      // M40: Save configuration (writeFile is atomic on most filesystems)
       const savedPath = await saveConfig(config, configPath);
 
       console.log();

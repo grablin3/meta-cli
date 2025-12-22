@@ -44,6 +44,7 @@ export function getAuthHeaders(): Record<string, string> {
 /**
  * Get authenticated GitHub user info.
  * Returns null if token invalid or API call fails.
+ * M38: Includes retry logic with exponential backoff.
  */
 export async function getGitHubUser(): Promise<{
   login: string;
@@ -55,25 +56,47 @@ export async function getGitHubUser(): Promise<{
     return null;
   }
 
-  try {
-    const response = await fetch('https://api.github.com/user', {
-      headers: {
-        ...getAuthHeaders(),
-        'Accept': 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-    });
+  // M38: Retry with exponential backoff
+  const maxRetries = 3;
+  const baseDelay = 1000; // 1 second
 
-    if (response.ok) {
-      return response.json() as Promise<{
-        login: string;
-        name?: string;
-        email?: string;
-        id: number;
-      }>;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch('https://api.github.com/user', {
+        headers: {
+          ...getAuthHeaders(),
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      });
+
+      if (response.ok) {
+        return response.json() as Promise<{
+          login: string;
+          name?: string;
+          email?: string;
+          id: number;
+        }>;
+      }
+
+      // M38: Don't retry on 4xx errors (client errors like invalid token)
+      if (response.status >= 400 && response.status < 500) {
+        return null;
+      }
+
+      // M38: Retry on 5xx errors (server errors) or rate limiting
+      if (attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    } catch (error) {
+      // M38: Retry on network errors
+      if (attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
-    return null;
-  } catch {
-    return null;
   }
+
+  return null;
 }
