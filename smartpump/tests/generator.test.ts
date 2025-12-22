@@ -100,7 +100,7 @@ describe('generator', () => {
       expect(body.modules).toHaveLength(1);
       expect(body.modules[0].kind).toBe('code');
       expect(body.modules[0].type).toBe('react');
-      expect(body.output).toBe('github');
+      expect(body.format).toBe('github');
     });
 
     test('handles API error response', async () => {
@@ -125,10 +125,11 @@ describe('generator', () => {
         headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           success: true,
-          data: {
-            fileCount: 25,
-            repoUrl: 'https://github.com/user/test-app',
-            cloneCommand: 'git clone https://github.com/user/test-app.git',
+          fileCount: 25,
+          repoUrl: 'https://github.com/user/test-app',
+          repository: {
+            html_url: 'https://github.com/user/test-app',
+            clone_url: 'https://github.com/user/test-app.git',
           },
         }),
       } as Response);
@@ -188,7 +189,7 @@ describe('generator', () => {
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.grablin.com/api/generate',
+        'https://www.grabl.in/api/generate',
         expect.anything()
       );
     });
@@ -196,8 +197,10 @@ describe('generator', () => {
 
   describe('listModules', () => {
     test('fetches modules from API', async () => {
-      const mockModules = [
+      const mockCodeModules = [
         { id: 'code-react', kind: 'code', type: 'react', name: 'React', description: 'React frontend' },
+      ];
+      const mockExtensions = [
         { id: 'extension-auth0', kind: 'extension', type: 'auth0', name: 'Auth0', description: 'Auth provider' },
       ];
 
@@ -205,15 +208,24 @@ describe('generator', () => {
         ok: true,
         json: async () => ({
           success: true,
-          data: { modules: mockModules },
+          data: {
+            codeModules: mockCodeModules,
+            providerModules: [],
+            vcsModules: [],
+            extensions: mockExtensions,
+            total: 2,
+          },
         }),
       } as Response);
 
       const result = await listModules('https://api.test.com');
 
       expect(result.success).toBe(true);
-      expect(result.modules).toEqual(mockModules);
-      expect(mockFetch).toHaveBeenCalledWith('https://api.test.com/api/modules');
+      expect(result.modules).toEqual([...mockCodeModules, ...mockExtensions]);
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.test.com/api/modules',
+        expect.objectContaining({ signal: expect.anything() })
+      );
     });
 
     test('handles API error', async () => {
@@ -240,12 +252,18 @@ describe('generator', () => {
     test('uses default API URL', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: { modules: [] } }),
+        json: async () => ({
+          success: true,
+          data: { codeModules: [], providerModules: [], vcsModules: [], extensions: [], total: 0 },
+        }),
       } as Response);
 
       await listModules();
 
-      expect(mockFetch).toHaveBeenCalledWith('https://api.grablin.com/api/modules');
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://www.grabl.in/api/modules',
+        expect.objectContaining({ signal: expect.anything() })
+      );
     });
   });
 });
