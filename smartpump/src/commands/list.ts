@@ -4,7 +4,7 @@ import ora from 'ora';
 import { logger } from '../utils/logger.js';
 import { listModules } from '../lib/generator.js';
 
-const DEFAULT_API_URL = process.env.GRABLIN_API_URL || 'https://api.grablin.com';
+const DEFAULT_API_URL = process.env.GRABLIN_API_URL || 'https://www.grabl.in';
 
 interface ModuleInfo {
   id: string;

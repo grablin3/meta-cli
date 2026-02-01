@@ -4,7 +4,7 @@ import { logger } from '../utils/logger.js';
 import { loadConfig, validateConfig, getConfigPath } from '../lib/config.js';
 import { generate } from '../lib/generator.js';
 
-const DEFAULT_API_URL = process.env.GRABLIN_API_URL || 'https://api.grablin.com';
+const DEFAULT_API_URL = process.env.GRABLIN_API_URL || 'https://www.grabl.in';
 
 export const generateCommand = new Command('generate')
   .description('Generate project from configuration')

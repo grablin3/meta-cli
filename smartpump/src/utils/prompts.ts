@@ -32,14 +32,27 @@ const BACKEND_CHOICES = [
 ];
 
 const EXTENSION_CHOICES = [
-  { name: 'Database (PostgreSQL)', value: 'database' },
   { name: 'Auth0 (Authentication)', value: 'auth0' },
-  { name: 'Redis (Caching)', value: 'redis' },
+  { name: 'Okta (Enterprise SSO)', value: 'okta' },
+  { name: 'Stytch (Passwordless)', value: 'stytch' },
+  { name: 'Stripe (Payments)', value: 'stripe' },
   { name: 'RBAC (Role-based access)', value: 'rbac' },
+  { name: 'Redis (Caching)', value: 'redis' },
+  { name: 'MemoryDB (In-memory store)', value: 'memorydb' },
+  { name: 'RDBMS (PostgreSQL)', value: 'rdbms' },
+  { name: 'Rate Limiting', value: 'ratelimit' },
+  { name: 'Webhooks (Outbound)', value: 'webhooks' },
+  { name: 'Audit Log', value: 'auditlog' },
+  { name: 'Teams (Multi-tenancy)', value: 'teams' },
+  { name: 'Custom Domain', value: 'customdomain' },
+  { name: 'Cloudflare (CDN/DNS)', value: 'cloudflare' },
+  { name: 'Route53 (DNS)', value: 'route53' },
+  { name: 'Whitelabel', value: 'whitelabel' },
 ];
 
 const PROVIDER_CHOICES = [
   { name: 'AWS', value: 'aws' },
+  { name: 'DigitalOcean', value: 'digitalocean' },
   { name: 'None (local only)', value: null },
 ];
 
